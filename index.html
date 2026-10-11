@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#b51f2b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MonStart">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+  <title>MonStart — Espace pompier</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">✚</div><div><strong>MonStart</strong><small>ESPACE PERSONNEL</small></div></div>
+    <button id="notifyBtn" class="icon-btn" aria-label="Activer les notifications">♧</button>
+  </header>
+  <main>
+    <section class="welcome">
+      <div><p class="eyebrow">TABLEAU DE BORD</p><h1>Salut, pompier 👋</h1><p class="muted">Ton espace personnel, au même endroit.</p></div>
+      <div class="status-pill"><span class="dot"></span> Mode démo</div>
+    </section>
+    <nav class="tabs" aria-label="Navigation principale">
+      <button class="tab active" data-page="home">Accueil</button>
+      <button class="tab" data-page="map">Carte GPS</button>
+      <button class="tab" data-page="schedule">Planning</button>
+      <button class="tab" data-page="history">Historique</button>
+      <button class="tab" data-page="profile">Profil</button>
+    </nav>
+
+    <section class="page active" id="page-home">
+      <div class="grid two">
+        <article class="card hero-card">
+          <p class="eyebrow light">PROCHAINE GARDE</p>
+          <h2 id="nextShift">À renseigner</h2>
+          <p id="nextShiftMeta">Ajoute une garde dans ton planning.</p>
+          <button class="btn btn-light" data-go="schedule">Voir le planning →</button>
+        </article>
+        <article class="card stat-card">
+          <span class="stat-icon">◷</span><p class="muted">Disponibilité</p>
+          <h2 id="availabilityLabel">Non définie</h2>
+          <select id="availability" aria-label="Ma disponibilité">
+            <option value="Non définie">Choisir ma disponibilité…</option>
+            <option value="Disponible">Disponible</option>
+            <option value="Indisponible">Indisponible</option>
+            <option value="En garde">En garde</option>
+          </select>
+          <small class="muted">Enregistré sur cet appareil uniquement</small>
+        </article>
+      </div>
+      <div class="section-head"><div><p class="eyebrow">RAPIDE</p><h2>Mon espace</h2></div></div>
+      <div class="grid three">
+        <button class="shortcut" data-go="map"><span>⌖</span><strong>Carte GPS</strong><small>Me localiser</small></button>
+        <button class="shortcut" data-go="schedule"><span>▦</span><strong>Mes gardes</strong><small>Gérer mon planning</small></button>
+        <button class="shortcut" data-go="history"><span>≡</span><strong>Historique</strong><small>Mes notes personnelles</small></button>
+      </div>
+      <div class="section-head"><div><p class="eyebrow">À GARDER EN TÊTE</p><h2>Alertes personnelles</h2></div><button class="text-btn" id="addAlert">+ Ajouter</button></div>
+      <div id="alertsList" class="stack"></div>
+      <p class="notice">⚠️ Cette application est un prototype personnel indépendant. Elle ne reçoit pas les vrais départs, alertes opérationnelles ou données SYSTEL. Ne l’utilise pas comme outil officiel d’alerte ou de secours.</p>
+    </section>
+
+    <section class="page" id="page-map">
+      <div class="section-head"><div><p class="eyebrow">LOCALISATION</p><h2>Carte GPS</h2></div><button class="btn btn-primary" id="locateBtn">Me localiser</button></div>
+      <p class="muted">La position est demandée uniquement lorsque tu appuies sur le bouton. Autorise la localisation dans Safari.</p>
+      <div id="map"></div>
+      <div class="card location-info"><strong id="locationTitle">Position non chargée</strong><p id="locationText" class="muted">Appuie sur « Me localiser » pour afficher ta position.</p><a id="openMaps" class="text-link" href="#" target="_blank" rel="noopener" hidden>Ouvrir dans Plans ↗</a></div>
+    </section>
+
+    <section class="page" id="page-schedule">
+      <div class="section-head"><div><p class="eyebrow">ORGANISATION</p><h2>Gardes & planning</h2></div></div>
+      <form id="shiftForm" class="card form-card">
+        <h3>Ajouter une garde ou un événement</h3>
+        <label>Intitulé<input id="shiftTitle" required maxlength="80" placeholder="Ex. Garde de nuit"></label>
+        <div class="grid two">
+          <label>Date<input id="shiftDate" type="date" required></label>
+          <label>Heure<input id="shiftTime" type="time" value="08:00" required></label>
+        </div>
+        <label>Lieu (facultatif)<input id="shiftPlace" maxlength="100" placeholder="Ex. Centre de secours"></label>
+        <button class="btn btn-primary" type="submit">Ajouter au planning</button>
+      </form>
+      <div class="section-head"><h3>À venir</h3><span class="count" id="shiftCount">0</span></div>
+      <div id="shiftsList" class="stack"></div>
+    </section>
+
+    <section class="page" id="page-history">
+      <div class="section-head"><div><p class="eyebrow">NOTES PERSONNELLES</p><h2>Historique</h2></div></div>
+      <form id="historyForm" class="card form-card">
+        <h3>Ajouter une entrée</h3>
+        <label>Date<input id="historyDate" type="date" required></label>
+        <label>Titre<input id="historyTitle" required maxlength="80" placeholder="Ex. Formation incendie"></label>
+        <label>Notes<textarea id="historyNotes" rows="3" maxlength="1000" placeholder="Notes personnelles, sans données sensibles…"></textarea></label>
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+      </form>
+      <div id="historyList" class="stack"></div>
+      <p class="muted small">L’historique est un carnet personnel, pas un registre opérationnel officiel. N’y inscris pas d’informations médicales, nominatives ou confidentielles sur les victimes.</p>
+    </section>
+
+    <section class="page" id="page-profile">
+      <div class="section-head"><div><p class="eyebrow">PERSONNALISATION</p><h2>Mes informations</h2></div></div>
+      <form id="profileForm" class="card form-card">
+        <label>Prénom ou surnom<input id="profileName" maxlength="60" placeholder="Comment t’appeler ?"></label>
+        <label>Centre de secours (facultatif)<input id="profileStation" maxlength="100" placeholder="Nom du centre"></label>
+        <label>Indicatif personnel (facultatif)<input id="profileCallsign" maxlength="40" placeholder="Indicatif"></label>
+        <button class="btn btn-primary" type="submit">Enregistrer mon profil</button>
+      </form>
+      <div class="card privacy-card"><h3>🔒 Tes données</h3><p class="muted">Cette version conserve tes informations dans le stockage local de ton navigateur. Elles ne sont pas synchronisées entre appareils et peuvent être effacées si tu supprimes les données du site.</p><button class="btn btn-outline" id="exportBtn">Exporter mes données (JSON)</button><button class="btn btn-danger-outline" id="clearBtn">Effacer toutes mes données</button></div>
+      <div class="card"><h3>À propos</h3><p class="muted">MonStart est une création indépendante non affiliée à mySTART+, SYSTEL ou à un SDIS. Les fonctions opérationnelles nécessitent une autorisation et une intégration officielle.</p></div>
+    </section>
+  </main>
+  <footer>MonStart · Prototype personnel · Pas un outil opérationnel officiel</footer>
+  <dialog id="alertDialog"><form method="dialog" id="alertForm"><h3>Nouvelle alerte personnelle</h3><label>Rappel<input id="alertText" maxlength="120" required placeholder="Ex. Vérifier mon sac"></label><label>Date et heure (facultatif)<input id="alertWhen" type="datetime-local"></label><div class="dialog-actions"><button class="btn btn-outline" value="cancel">Annuler</button><button class="btn btn-primary" id="saveAlert" value="default">Enregistrer</button></div></form></dialog>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
